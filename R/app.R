@@ -46,7 +46,7 @@ wd <- '/Users/hanbossier/Dropbox/StocksApp/'
 load(paste0(wd, 'raw_data/Euronext.RDa'))
 
 # Markets
-markets <- Stocks %>% select(Market) %>% unique()
+markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
 allStocks <- Stocks %>% filter(Market == 'Euronext Brussels') %>% select(Naam) 
 
 # allStocks %>% slice(-c(1323,1324))
@@ -56,7 +56,7 @@ allStocks <- Stocks %>% filter(Market == 'Euronext Brussels') %>% select(Naam)
 ui <- fluidPage(
    
    # Application title
-   titlePanel("wtclassic Stock Picks"),
+   titlePanel("wtclassic's Stock Picks"),
    
    # # Sidebar with controls to select a dataset and specify the
    # # number of observations to view
@@ -83,11 +83,10 @@ ui <- fluidPage(
       # Drop down menu to select the market
      selectInput("markets", label = 'Markets', choices = markets, selected = 'Euronext Brussels'),
      
-     # Drop down menu to select the stocks
-     selectInput("selectedstock", label = 'Stocks', choices = allStocks, selected = 'ABLYNX')
+     # Drop down menu to select the stocks: this depends on choice of market, defined in server function below.
+     uiOutput("stockSelection")
+     #selectInput("selectedstock", label = 'Stocks', choices = allStocks, selected = 'ABLYNX')
      ),
-    # check http://stackoverflow.com/questions/34929206/r-shiny-selectinput-that-is-dependent-on-another-selectinput
-    # for dynamic intput.
      # Show the candle plot
     mainPanel(
       plotOutput("candlePlot")
@@ -133,21 +132,26 @@ server <- function(input, output) {
   #   head(datasetInput(), n = input$obs)
   # })
   # 
+  
+  output$stockSelection <- renderUI({
+    selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
+  })
+  
   # Basic candle plot 
   output$candlePlot <- renderPlot({
     
     STOCK <- input$selectedstock
     symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
-    #print(paste0('You selected' ,STOCK))
+    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
     end <- today()
     start <- end - weeks(20)
-    HighLowData <- tq_get(paste0(symbol, ".BR"), get = "stock.prices", from = " 1990-01-01")
+    HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
     HighLowData %>%
       ggplot(aes(x = date, y = close)) +
       geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
       geom_bbands(aes(high = high, low = low, close = close),
                   ma_fun = SMA, n = 20, sd = 2, size = 1) + 
-      labs(title = "Ablynx: Candlestick",
+      labs(title = paste0(STOCK, ": Candlestick"),
            subtitle = "Volatility",
            x = "", y = "Closing Price") +
       coord_x_date(xlim = c(start, end),

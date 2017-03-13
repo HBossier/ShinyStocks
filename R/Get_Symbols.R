@@ -45,6 +45,29 @@ Stocks.raw <- fread(file = paste0(raw_data, TimePoints[['March2017']],'.csv')) %
 # Select name, symbel and market
 Stocks <- Stocks.raw %>% select(Naam, Symbol, Market)
 
+# Suffix, depending on market
+marketSuffix <- data.frame('market' = c(
+    'paris',
+    'brussels',
+    'lisbon',
+    'amsterdam'),
+  'suffix' = c(
+    'PA',
+    'BR',
+    'LS',
+    'AS'
+  ))
+
+# Add suffix
+SuffixAdd <- function(input, suffix){
+  LocateMarket <- apply(suffix[,'market'] %>% array(), 1, grepl, x = input, ignore.case = TRUE)
+  output <- ifelse(any(LocateMarket), as.character(suffix[LocateMarket,'suffix']), NA)
+  return(output)
+}
+
+Stocks <- Stocks %>% rowwise() %>% mutate(suffix = SuffixAdd(input = Market, suffix = marketSuffix))
+
+# Save data frame 
 save(Stocks, file = paste0(raw_data, 'Euronext.RDa'))
 
 
