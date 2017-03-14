@@ -11,7 +11,7 @@ server <- function(input, output) {
     symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
     suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
     end <- today()
-    start <- end - weeks(20)
+    start <- end - weeks(input$weeks)
     HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
     HighLowData %>%
       ggplot(aes(x = date, y = close)) +
@@ -32,23 +32,15 @@ server <- function(input, output) {
       theme_bw()
   })
   
-  # output$distPlot <- renderPlot({
-  #   # generate bins based on input$bins from ui.R
-  #   x    <- faithful[, 2]
-  #   bins <- seq(min(x), max(x), length.out = input$bins + 1)
-  #   
-  #   # draw the histogram with the specified number of bins
-  #   hist(x, breaks = bins, col = 'darkgray', border = 'white')
-  # })
   
   output$distPlot <- renderPlot({
     STOCK <- input$selectedstock
     symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
     suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
     end <- today()
-    start <- end - weeks(20)
+    start <- end - weeks(input$weeks)
     HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
-    HighLowData %>%
+    HighLowData %>% filter(date > start & date < end) %>%
       ggplot(aes(x = date, y = close)) +
       geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
       geom_segment(aes(x = date, y = 0, xend = date, yend = ((volume / max(volume)) * (HighLowData %>% select(high) %>% max())))) +

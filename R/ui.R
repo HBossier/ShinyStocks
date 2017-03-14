@@ -67,8 +67,12 @@ ui <- fluidPage(
       selectInput("markets", label = 'Markets', choices = markets, selected = 'Euronext Brussels'),
       
       # Drop down menu to select the stocks: this depends on choice of market, defined in server function below.
-      uiOutput("stockSelection")
-      #selectInput("selectedstock", label = 'Stocks', choices = allStocks, selected = 'ABLYNX')
+      uiOutput("stockSelection"),
+      
+      # Number of weeks to plot
+      numericInput("weeks", "Number of weeks", value = 20, min = 1, max = 260)
+      
+      # Checkbox for band
     ),
     # Show the candle plot
     mainPanel(
@@ -80,10 +84,10 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       sliderInput("bins",
-                  "Number of bins:",
+                  "Number of weeks:",
                   min = 1,
-                  max = 50,
-                  value = 30)
+                  max = 260,
+                  value = 20)
     ),
     
     # Show a plot of the generated distribution

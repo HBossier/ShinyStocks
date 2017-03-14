@@ -60,6 +60,10 @@ marketSuffix <- data.frame('market' = c(
 
 # Add suffix
 SuffixAdd <- function(input, suffix){
+  InputCity <- gsub('Euronext ', replacement = "", x = input)
+  if(grepl(',', InputCity)){
+    input <- strsplit(InputCity,  split = ',')[[1]][1]
+  }
   LocateMarket <- apply(suffix[,'market'] %>% array(), 1, grepl, x = input, ignore.case = TRUE)
   output <- ifelse(any(LocateMarket), as.character(suffix[LocateMarket,'suffix']), NA)
   return(output)
