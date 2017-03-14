@@ -30,9 +30,8 @@ library(tidyquant)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+require(repmis)
 
-# Working directory
-wd <- '/Users/hanbossier/Dropbox/StocksApp/'
 
 
 ##
@@ -43,7 +42,14 @@ wd <- '/Users/hanbossier/Dropbox/StocksApp/'
 
 
 # We first define the available stocks by reading in Euronext stocks
-load(paste0(wd, 'raw_data/Euronext.RDa'))
+LOCAL <- FALSE
+if(isTRUE(LOCAL)){
+  # Working directory and load data directly from HD
+  wd <- '/Users/hanbossier/Dropbox/StocksApp/'
+  load(paste0(wd, 'raw_data/Euronext.RDa'))
+}else{
+  repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/raw_data/Euronext.RDa?raw=true")
+}
 
 # Markets
 markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
