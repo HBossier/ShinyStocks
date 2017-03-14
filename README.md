@@ -8,15 +8,14 @@ To see the app under development stage, you need to:
 
 1. Clone/fork this repository
 2. Have RStudio installed and running.
-3. From RStudio, open [app.R](https://raw.githubusercontent.com/HBossier/ShinyStocks/master/R/app.R)
-4. Have the following packages installed:
+3. Have the following packages installed:
   * shiny
   * tidyquant
   * ggplot2
   * dplyr
   * tidyr
   * repmis
-5. Then click *Run App* at the top right corner.
+4. Then run the command: ```shiny::runGitHub('ShinyStocks', 'HBossier', subdir = "/R")```
   
  
 # Info
