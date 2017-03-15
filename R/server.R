@@ -2,24 +2,46 @@ server <- function(input, output) {
 
   # Generate data, based on selection of the stock
   output$stockSelection <- renderUI({
-    selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
+      selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
   })
   
 
   # Basic candle plot 
   output$candlePlot <- renderPlot({
-    STOCK <- input$selectedstock
-    symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
-    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
+    if(is.null(input$selectedstock)){
+      STOCK <- 'ABLYNX'
+    }else{
+      STOCK <- input$selectedstock
+    }
+    # Get parameters
     end <- today()
     start <- end - weeks(input$weeks)
+    WA    <-  input$WA
+    BOOLEANmanWA <- FALSE
+    if(input$manWA !=0){
+      BOOLEANmanWA <- TRUE
+    }
+    PlotType  <-  input$PlotType
+    symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
+    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
     HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
-    HighLowData %>% 
-      ggplot(aes(x = date, y = close)) +
-      geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
-      geom_bbands(aes(high = high, low = low, close = close),
-                  ma_fun = SMA, n = 20, sd = 2, size = 1) + 
-      labs(title = paste0(STOCK, ": Candlestick"),
+        # Run plot 
+      HighLowData %>% 
+        ggplot(aes(x = date, y = close)) + {
+          if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
+        } + {
+          if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 150, color = "red", linetype = 4, size = 1)                       # Weigthed moving averageWith n the number of days
+        } + {
+          if( "2" %in% WA)  geom_ma(ma_fun = WMA, n = 50, color = "green", linetype = 4, size = 1)
+        } + {
+          if( "3" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "blue", linetype = 4, size = 1)
+        } + {
+          if(BOOLEANmanWA) geom_ma(ma_fun = WMA, n = input$manWA, color = "purple", linetype = 4, size = 1)
+        } +
+          #geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
+          #geom_bbands(aes(high = high, low = low, close = close),
+                  #ma_fun = SMA, n = 20, sd = 2, size = 1) + 
+      labs(title = paste0(STOCK, ": ", PlotType),
            subtitle = "Volatility",
            x = "", y = "Closing Price") +
       coord_x_date(xlim = c(start, end),
@@ -28,22 +50,22 @@ server <- function(input, output) {
   })
   
 
-  # Volume 
-  output$distPlot <- renderPlot({
-    STOCK <- input$selectedstock
-    symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
-    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
-    end <- today()
-    start <- end - weeks(input$weeks)
-    HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
-    
-    HighLowData %>% filter(date > start & date < end) %>%
-      ggplot(aes(x = date, y = close)) +
-      geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
-      geom_segment(aes(x = date, y = 0, xend = date, yend = ((volume / max(volume)) * (HighLowData %>% select(high) %>% max())))) +
-      labs(title = paste0(STOCK, ": Candlestick"),
-           subtitle = "Volatility",
-           x = "", y = "Closing Price")
-  })
+  # # Volume 
+  # output$distPlot <- renderPlot({
+  #   STOCK <- input$selectedstock
+  #   symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
+  #   suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
+  #   end <- today()
+  #   start <- end - weeks(input$weeks)
+  #   HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
+  #   
+  #   HighLowData %>% filter(date > start & date < end) %>%
+  #     ggplot(aes(x = date, y = close)) +
+  #     geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
+  #     geom_segment(aes(x = date, y = 0, xend = date, yend = ((volume / max(volume)) * (HighLowData %>% select(high) %>% max())))) +
+  #     labs(title = paste0(STOCK, ": Candlestick"),
+  #          subtitle = "Volatility",
+  #          x = "", y = "Closing Price")
+  # })
   
 }

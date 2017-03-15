@@ -33,26 +33,31 @@ library(tidyr)
 require(repmis)
 
 
+# For development:
+LOCAL <- FALSE
+if(isTRUE(LOCAL)){
+  wd <- '/Users/hanbossier/Dropbox/StocksApp/'
+  setwd(wd)
+}
+
+
 ##
 ##########
 ### Stocks
 ##########
 ##
 
-
-# We first define the available stocks by reading in Euronext stocks
-LOCAL <- FALSE
-if(isTRUE(LOCAL)){
-  # Working directory and load data directly from HD
-  wd <- '/Users/hanbossier/Dropbox/StocksApp/'
-  load(paste0(wd, 'raw_data/Euronext.RDa'))
+# Check whether we are running the app locally (correct WD)
+WD <- getwd()
+if(grepl(pattern = 'StocksApp', x = WD)){
+  # Load the stocks for which we will get data
+  load('Euronext.RDa')
 }else{
-  repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/raw_data/Euronext.RDa?raw=true")
+  repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/R/Euronext.RDa?raw=true")
 }
 
 # Markets
 markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
-allStocks <- Stocks %>% filter(Market == 'Euronext Brussels') %>% select(Naam) 
 
 # Define UI for application
 ui <- fluidPage(
@@ -70,7 +75,17 @@ ui <- fluidPage(
       uiOutput("stockSelection"),
       
       # Number of weeks to plot
-      numericInput("weeks", "Number of weeks", value = 20, min = 1, max = 260)
+      numericInput("weeks", "Number of weeks", value = 52, min = 1, max = 260),
+      
+      # Drop down menu to select plot type
+      selectInput("PlotType", label = 'Type of Plot', choices = c("Line Bar", "Candlestick"), selected = 'Stock Prices'),
+
+      # Checkbox for weighted averages
+      checkboxGroupInput("WA", label = "Weighted average over x days", 
+                                choices = list("150" = 1, 
+                                               "20" = 2, "50" = 3),
+                                selected = NULL, inline = TRUE),
+      numericInput("manWA", "or input x days:", value = 0, min = 1, max = 1800)
       
       # Checkbox for band
     ),
@@ -78,22 +93,30 @@ ui <- fluidPage(
     mainPanel(
       plotOutput("candlePlot")
     )
-  ),
-  
-  # Sidebar with a slider input for number of bins 
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput("bins",
-                  "Number of weeks:",
-                  min = 1,
-                  max = 260,
-                  value = 20)
-    ),
-    
-    # Show a plot of the generated distribution
-    mainPanel(
-      plotOutput("distPlot")
-    )
   )
+  
+
+  # # Main panel with plot
+  # sidebarLayout(
+  #     mainPanel(
+  #        plotOutput("candlePlot")
+  #     )
+  #   )
+  
+  # # Sidebar with a slider input for number of bins 
+  # sidebarLayout(
+  #   sidebarPanel(
+  #     sliderInput("bins",
+  #                 "Number of weeks:",
+  #                 min = 1,
+  #                 max = 260,
+  #                 value = 20)
+  #   ),
+  #   
+  #   # Show a plot of the generated distribution
+  #   mainPanel(
+  #     plotOutput("distPlot")
+  #   )
+  # )
 )
 
