@@ -30,8 +30,12 @@
 library(dplyr)
 library(data.table)
 
-# Base location 
+# Location of raw data
 raw_data <- '~/Dropbox/StocksApp/raw_data/'
+
+# Location of processed data
+process_data <- '~/Dropbox/StocksApp/R/'
+
 
 # Last version of data
 TimePoints <- list(
@@ -72,7 +76,7 @@ SuffixAdd <- function(input, suffix){
 Stocks <- Stocks %>% rowwise() %>% mutate(suffix = SuffixAdd(input = Market, suffix = marketSuffix))
 
 # Save data frame 
-save(Stocks, file = paste0(raw_data, 'Euronext.RDa'))
+save(Stocks, file = paste0(process_data, 'Euronext.RDa'))
 
 
 
