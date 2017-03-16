@@ -18,11 +18,14 @@
 # This is a Shiny web application. To run, open this file in RStudio and click the
 # 'Run App' button above.
 
+# Header of ui and server need to include both loading of Stocks!
+
 ##
 ##########
 ### Preparation
 ##########
 ##
+
 
 # Load in packages
 library(shiny)
@@ -32,13 +35,6 @@ library(dplyr)
 library(tidyr)
 require(repmis)
 
-
-# For development:
-LOCAL <- FALSE
-if(isTRUE(LOCAL)){
-  wd <- '/Users/hanbossier/Dropbox/StocksApp/'
-  setwd(wd)
-}
 
 
 ##
@@ -58,6 +54,14 @@ if(grepl(pattern = 'StocksApp', x = WD)){
 
 # Markets
 markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
+
+
+##
+##########
+### UI
+##########
+##
+
 
 # Define UI for application
 ui <- fluidPage(
