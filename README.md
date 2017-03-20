@@ -28,7 +28,7 @@ shiny::runGitHub('ShinyStocks', 'HBossier', subdir = "/R")
 1. Have RStudio installed and running 
 2. Install the packages
   ```r
-  install.packages(c("shiny", "tidyquant","ggplot2" , "dplyr", "tidyr", "repmis)) 
+  install.packages(c("shiny", "tidyquant","ggplot2" , "dplyr", "tidyr", "repmis")) 
   ``` 
 3. Download this repository and enter the directory from within RStudio
 4. Run the following in **R**
