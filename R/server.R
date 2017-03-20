@@ -64,7 +64,17 @@ server <- function(input, output) {
       selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
   })
   
-
+  # # Generate the chosen WA
+  # output$manualWA <- renderUI({
+  #     numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
+  # })
+  
+  # Generate chosen WA
+  output$manualWA <- renderUI({
+    if(4 %in% input$WA ) 
+      numericInput("manWA", "Days:", value = 0, min = 1, max = 1800)
+  })
+  
   # Basic candle plot 
   output$candlePlot <- renderPlot({
     if(is.null(input$selectedstock)){
@@ -72,14 +82,20 @@ server <- function(input, output) {
     }else{
       STOCK <- input$selectedstock
     }
+    # Get WA
+    BOOLEANmanWA <- FALSE
+    if(is.null(input$manWA)){
+     WA <- 0
+     BOOLEANmanWA <- FALSE
+     ManWA <- 0
+    }else{
+      WA  <-  input$WA
+      ManWA <- input$manWA
+      BOOLEANmanWA <- TRUE
+    }
     # Get parameters
     end <- today()
     start <- end - weeks(input$weeks)
-    WA    <-  input$WA
-    BOOLEANmanWA <- FALSE
-    if(input$manWA !=0){
-      BOOLEANmanWA <- TRUE
-    }
     PlotType  <-  input$PlotType
     symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
     suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
@@ -95,7 +111,7 @@ server <- function(input, output) {
         } + {
           if( "3" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "blue", linetype = 4, size = 1)
         } + {
-          if(BOOLEANmanWA) geom_ma(ma_fun = WMA, n = input$manWA, color = "purple", linetype = 4, size = 1)
+          if(BOOLEANmanWA) geom_ma(ma_fun = WMA, n = ManWA, color = "purple", linetype = 4, size = 1)
         } +
           #geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
           #geom_bbands(aes(high = high, low = low, close = close),
@@ -109,6 +125,9 @@ server <- function(input, output) {
   })
   
 
+
+  
+  
   # # Volume 
   # output$distPlot <- renderPlot({
   #   STOCK <- input$selectedstock

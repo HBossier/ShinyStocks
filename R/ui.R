@@ -85,12 +85,26 @@ ui <- fluidPage(
       selectInput("PlotType", label = 'Type of Plot', choices = c("Line Bar", "Candlestick"), selected = 'Stock Prices'),
 
       # Checkbox for weighted averages
-      checkboxGroupInput("WA", label = "Weighted average over x days", 
-                                choices = list("150" = 1, 
-                                               "20" = 2, "50" = 3),
+      checkboxGroupInput("WA", label = "Weighted average over x days",
+                                choices = list("150" = 1,
+                                               "20" = 2, "50" = 3, "Custom" = 4),
                                 selected = NULL, inline = TRUE),
-      numericInput("manWA", "or input x days:", value = 0, min = 1, max = 1800)
+      # Checkbox for manual WA
+      # conditionalPanel(condition = "input.WA == 4",
+      #   numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
+      # )
+      uiOutput("manualWA")
+      #numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
       
+      # Checkbox for weighted averages
+      # uiOutput("WASelection")
+      
+      # conditionalPanel(condition = "input.WA == 4",
+      #   numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
+      # )
+      
+      
+      #input.WA.indexOf('4')
       # Checkbox for band
     ),
     # Show the candle plot
