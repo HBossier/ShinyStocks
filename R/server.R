@@ -93,11 +93,11 @@ server <- function(input, output) {
           if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
         } + {
           # Weigthed moving averages with n the number of days
-          if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 150, color = "red", linetype = 4, size = 1)
+          if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "red", linetype = 4, size = 1)
         } + {
           if( "2" %in% WA)  geom_ma(ma_fun = WMA, n = 50, color = "green", linetype = 4, size = 1)
         } + {
-          if( "3" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "blue", linetype = 4, size = 1)
+          if( "3" %in% WA ) geom_ma(ma_fun = WMA, n = 150, color = "blue", linetype = 4, size = 1)
         } + {
           if("4" %in% WA) geom_ma(ma_fun = WMA, n = max(1, ManWA), color = "purple", linetype = 4, size = ifelse(ManWA == 0, 0, 1))
         } +
@@ -110,7 +110,32 @@ server <- function(input, output) {
   })
   
 
-
+  output$Plot10 <- renderPlot({
+    
+    ###   Last 10 years
+    
+    x_year <- year(today()) - 10:1
+    low10y <- high10y <- c()
+    for (i in 1:10){      
+      low10y[i] <-  HighLowData %>% 
+      filter( year(date) == x_year[i])  %>% 
+      select(low) %>% 
+      min() 
+    
+    high10y[i] <-
+      HighLowData %>% 
+      filter( year(date) == x_year[i])  %>% 
+      select(high) %>% 
+      max() 
+    }
+    
+    
+    y10 <- data.frame( x= x_year, y = c(low10y, high10y))
+    
+    ggplot( y10, aes(x = x, y=y)) +  
+      geom_line(aes(group = x))
+    
+  })
   
   
   # # Volume 

@@ -86,8 +86,8 @@ ui <- fluidPage(
 
       # Checkbox for weighted averages
       checkboxGroupInput("WA", label = "Weighted average over x days",
-                                choices = list("150" = 1,
-                                               "20" = 2, "50" = 3, "Custom" = 4),
+                                choices = list("20" = 1,
+                                               "50" = 2, "150" = 3, "Custom" = 4),
                                 selected = NULL, inline = TRUE),
       conditionalPanel(condition = "(input.WA[0] == 4) | (input.WA[1] == 4) | (input.WA[2] == 4) | (input.WA[3] == 4)",
         numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
@@ -95,7 +95,8 @@ ui <- fluidPage(
     ),
     # Show the candle plot
     mainPanel(
-      plotOutput("candlePlot")
+      plotOutput("candlePlot"),
+      plotOutput("Plot10")
     )
   )
   
