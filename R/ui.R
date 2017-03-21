@@ -89,23 +89,9 @@ ui <- fluidPage(
                                 choices = list("150" = 1,
                                                "20" = 2, "50" = 3, "Custom" = 4),
                                 selected = NULL, inline = TRUE),
-      # Checkbox for manual WA
-      # conditionalPanel(condition = "input.WA == 4",
-      #   numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
-      # )
-      uiOutput("manualWA")
-      #numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
-      
-      # Checkbox for weighted averages
-      # uiOutput("WASelection")
-      
-      # conditionalPanel(condition = "input.WA == 4",
-      #   numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
-      # )
-      
-      
-      #input.WA.indexOf('4')
-      # Checkbox for band
+      conditionalPanel(condition = "(input.WA[0] == 4) | (input.WA[1] == 4) | (input.WA[2] == 4) | (input.WA[3] == 4)",
+        numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
+      )
     ),
     # Show the candle plot
     mainPanel(
@@ -114,13 +100,7 @@ ui <- fluidPage(
   )
   
 
-  # # Main panel with plot
-  # sidebarLayout(
-  #     mainPanel(
-  #        plotOutput("candlePlot")
-  #     )
-  #   )
-  
+
   # # Sidebar with a slider input for number of bins 
   # sidebarLayout(
   #   sidebarPanel(

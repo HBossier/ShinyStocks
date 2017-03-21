@@ -64,18 +64,8 @@ server <- function(input, output) {
       selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
   })
   
-  # # Generate the chosen WA
-  # output$manualWA <- renderUI({
-  #     numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
-  # })
-  
-  # Generate chosen WA
-  output$manualWA <- renderUI({
-    if(4 %in% input$WA ) 
-      numericInput("manWA", "Days:", value = 0, min = 1, max = 1800)
-  })
-  
-  # Basic candle plot 
+
+  # Candle plot 
   output$candlePlot <- renderPlot({
     if(is.null(input$selectedstock)){
       STOCK <- 'ABLYNX'
@@ -83,15 +73,12 @@ server <- function(input, output) {
       STOCK <- input$selectedstock
     }
     # Get WA
-    BOOLEANmanWA <- FALSE
-    if(is.null(input$manWA)){
+    if(is.null(input$WA)){
      WA <- 0
-     BOOLEANmanWA <- FALSE
      ManWA <- 0
     }else{
       WA  <-  input$WA
       ManWA <- input$manWA
-      BOOLEANmanWA <- TRUE
     }
     # Get parameters
     end <- today()
@@ -105,23 +92,21 @@ server <- function(input, output) {
         ggplot(aes(x = date, y = close)) + {
           if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
         } + {
-          if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 150, color = "red", linetype = 4, size = 1)                       # Weigthed moving averageWith n the number of days
+          # Weigthed moving averages with n the number of days
+          if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 150, color = "red", linetype = 4, size = 1)
         } + {
           if( "2" %in% WA)  geom_ma(ma_fun = WMA, n = 50, color = "green", linetype = 4, size = 1)
         } + {
           if( "3" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "blue", linetype = 4, size = 1)
         } + {
-          if(BOOLEANmanWA) geom_ma(ma_fun = WMA, n = ManWA, color = "purple", linetype = 4, size = 1)
+          if("4" %in% WA) geom_ma(ma_fun = WMA, n = max(1, ManWA), color = "purple", linetype = 4, size = ifelse(ManWA == 0, 0, 1))
         } +
-          #geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
-          #geom_bbands(aes(high = high, low = low, close = close),
-                  #ma_fun = SMA, n = 20, sd = 2, size = 1) + 
       labs(title = paste0(STOCK, ": ", PlotType),
            subtitle = "Volatility",
            x = "", y = "Closing Price") +
       coord_x_date(xlim = c(start, end),
                    ylim = c(HighLowData %>% filter(date > start & date < end) %>% select(low) %>% min(),
-                            HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max()))
+                            HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max())) 
   })
   
 
