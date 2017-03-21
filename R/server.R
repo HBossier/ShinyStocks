@@ -64,15 +64,32 @@ server <- function(input, output) {
       selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
   })
   
-
-  # Candle plot 
-  output$candlePlot <- renderPlot({
+  # Current selected stock
+  currentStock <- reactive({
     if(is.null(input$selectedstock)){
       STOCK <- 'ABLYNX'
     }else{
       STOCK <- input$selectedstock
     }
-    # Get WA
+    return(STOCK)
+  })
+  
+  # Data, based on current stock
+  currentStockData <- reactive({
+    STOCK <- currentStock()
+    symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
+    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
+    HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
+    return(HighLowData)
+  })
+  
+  # Candle plot 
+  output$candlePlot <- renderPlot({
+    # Get the current selected stock
+    STOCK <- currentStock()
+    # Get the stock data
+    HighLowData <- currentStockData()
+    # Get weighted average
     if(is.null(input$WA)){
      WA <- 0
      ManWA <- 0
@@ -80,14 +97,11 @@ server <- function(input, output) {
       WA  <-  input$WA
       ManWA <- input$manWA
     }
-    # Get parameters
+    # Other parameters
     end <- today()
     start <- end - weeks(input$weeks)
     PlotType  <-  input$PlotType
-    symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
-    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
-    HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
-        # Run plot 
+      # Run plot 
       HighLowData %>% 
         ggplot(aes(x = date, y = close)) + {
           if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
@@ -109,32 +123,19 @@ server <- function(input, output) {
                             HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max())) 
   })
   
-
+  # Plot with highest and lowest value over 10 years
   output$Plot10 <- renderPlot({
-    
-    ###   Last 10 years
-    
+    # Get the currentStockData
+    HighLowData <- currentStockData()
+    # Go 10 years back
     x_year <- year(today()) - 10:1
-    low10y <- high10y <- c()
-    for (i in 1:10){      
-      low10y[i] <-  HighLowData %>% 
-      filter( year(date) == x_year[i])  %>% 
-      select(low) %>% 
-      min() 
-    
-    high10y[i] <-
-      HighLowData %>% 
-      filter( year(date) == x_year[i])  %>% 
-      select(high) %>% 
-      max() 
-    }
-    
-    
-    y10 <- data.frame( x= x_year, y = c(low10y, high10y))
-    
-    ggplot( y10, aes(x = x, y=y)) +  
-      geom_line(aes(group = x))
-    
+    # Filter, group by year, summarize through min and max and transfrom
+    y10 <- HighLowData %>% filter(year(date) %in% x_year) %>% 
+              group_by(year = year(date)) %>% summarise(low10y = min(low), high10y = max(high)) %>%
+              gather("LowHigh", "value", 2:3)
+    # Draw lines
+    ggplot(y10, aes(x = year, y = value)) +  
+      geom_line(aes(group = year)) + scale_y_continuous(name = "Max/min value")
   })
   
   
