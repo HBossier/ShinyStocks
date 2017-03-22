@@ -78,10 +78,27 @@ server <- function(input, output) {
     start <- end - weeks(input$weeks)
     PlotType  <-  input$PlotType
     
-    # First plot 
-    plot1 <- HighLowData %>% 
-        ggplot(aes(x = date, y = close)) + {
-          if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
+    # Set option for scientific notation
+    options(digits = 2)
+    options(scipen=-2)
+    
+    # Create the data frames for grid_extra
+    FacettingData <- HighLowData %>% filter(date > start & date < end) %>% 
+          rename(price = close) %>% select(date, price, volume) %>% 
+          gather("statistic","value",2:3)
+    StockDataMain <- HighLowData %>% filter(date > start & date < end) %>%
+          select(-volume, - adjusted) %>% mutate(statistic = "price")
+    StockDataVolume <- HighLowData %>% filter(date > start & date < end) %>%
+          select(date, volume) %>% mutate(statistic = "volume")
+    
+    # Now the facetted plot
+    ggplot(FacettingData, aes(x = date, y = value)) + 
+      facet_grid(statistic ~. , scales="free_y") + {
+          if( PlotType == "Line Bar"){
+            geom_line(data = StockDataMain, aes(x = date, y = close)) 
+          }else{
+            geom_candlestick(data = StockDataMain, aes(open = open, close = close, high = high, low = low)) 
+          }
         } + {
           # Weigthed moving averages with n the number of days
           if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "red", linetype = 4, size = 1)
@@ -92,20 +109,45 @@ server <- function(input, output) {
         } + {
           if("4" %in% WA) geom_ma(ma_fun = WMA, n = max(1, ManWA), color = "purple", linetype = 4, size = ifelse(ManWA == 0, 0, 1))
         } +
+      geom_bar(data = StockDataVolume, aes(x = date, y = volume), stat = 'identity', width = 1) +
       labs(title = paste0(STOCK, ": ", PlotType),
            subtitle = "Volatility",
-           x = "", y = "Closing Price") +
-      coord_x_date(xlim = c(start, end),
-                   ylim = c(HighLowData %>% filter(date > start & date < end) %>% select(low) %>% min(),
-                            HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max())) 
-    
-    # Second plot
-    plot2 <- HighLowData %>% filter(date > start & date < end) %>%
-      ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
+           x = "", y = "") +
       bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5) + theme_minimal()
-
-    # Plot them together
-    gridExtra::grid.arrange(plot1, plot2, ncol = 1, heights = c(3,1))
+    
+    # Now reset options for digits: THIS DOES NOT WORK
+    #options(digits = 7)
+    #options(scipen = 0)
+    
+    # # First plot 
+    # plot1 <- HighLowData %>% filter(date > start & date < end) %>%
+    #     ggplot(aes(x = date, y = close)) + {
+    #       if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
+    #     } + {
+    #       # Weigthed moving averages with n the number of days
+    #       if( "1" %in% WA ) geom_ma(ma_fun = WMA, n = 20, color = "red", linetype = 4, size = 1)
+    #     } + {
+    #       if( "2" %in% WA)  geom_ma(ma_fun = WMA, n = 50, color = "green", linetype = 4, size = 1)
+    #     } + {
+    #       if( "3" %in% WA ) geom_ma(ma_fun = WMA, n = 150, color = "blue", linetype = 4, size = 1)
+    #     } + {
+    #       if("4" %in% WA) geom_ma(ma_fun = WMA, n = max(1, ManWA), color = "purple", linetype = 4, size = ifelse(ManWA == 0, 0, 1))
+    #     } +
+    #   labs(title = paste0(STOCK, ": ", PlotType),
+    #        subtitle = "Volatility",
+    #        x = "", y = "Closing Price") +
+    #   bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5) + theme_minimal() +
+    #   coord_x_date(xlim = NULL,
+    #                ylim = c(HighLowData %>% filter(date > start & date < end) %>% select(low) %>% min(),
+    #                         HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max())) 
+    # 
+    # # Second plot
+    # plot2 <- HighLowData %>% filter(date > start & date < end) %>%
+    #   ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
+    #   bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5) + theme_minimal()
+    # 
+    # # Plot them together
+    # gridExtra::grid.arrange(plot1, plot2, ncol = 1, heights = c(3,1))
   })
   
   # Plot with highest and lowest value over 10 years

@@ -18,7 +18,6 @@
 # This is a Shiny web application. To run, open this file in RStudio and click the
 # 'Run App' button above.
 
-# Header of ui and server need to include both loading of Stocks!
 
 ##
 ##########
@@ -26,35 +25,7 @@
 ##########
 ##
 
-
-# Load in packages
-library(shiny)
-library(tidyquant)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-require(repmis)
-
-
-
-##
-##########
-### Stocks
-##########
-##
-
-# Check whether we are running the app locally (correct WD)
-WD <- getwd()
-if(grepl(pattern = 'StocksApp', x = WD)){
-  # Load the stocks for which we will get data
-  load('Euronext.RDa')
-}else{
-  repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/R/Euronext.RDa?raw=true")
-}
-
-# Markets
-markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
-
+# See global.R
 
 ##
 ##########
@@ -95,27 +66,9 @@ ui <- fluidPage(
     ),
     # Show the candle plot
     mainPanel(
-      plotOutput("candlePlot"),
+      plotOutput("Mainplot"),
       plotOutput("Plot10")
     )
   )
-  
-
-
-  # # Sidebar with a slider input for number of bins 
-  # sidebarLayout(
-  #   sidebarPanel(
-  #     sliderInput("bins",
-  #                 "Number of weeks:",
-  #                 min = 1,
-  #                 max = 260,
-  #                 value = 20)
-  #   ),
-  #   
-  #   # Show a plot of the generated distribution
-  #   mainPanel(
-  #     plotOutput("distPlot")
-  #   )
-  # )
 )
 

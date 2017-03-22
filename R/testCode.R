@@ -32,14 +32,8 @@ require(bdscale)
 ##########
 ##
 
-# Check whether we are running the app locally (correct WD)
-WD <- getwd()
-if(grepl(pattern = 'StocksApp', x = WD)){
-  # Load the stocks for which we will get data
-  load('Euronext.RDa')
-}else{
-  repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/R/Euronext.RDa?raw=true")
-}
+# Load the stocks for which we will get data
+repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/R/Euronext.RDa?raw=true")
 
 # Markets
 markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
@@ -58,7 +52,7 @@ ManWA <- 50
 
 # Other parameters
 end <- today()
-start <- end - weeks(10)
+start <- end - weeks(40)
 PlotType  <-  "Line Bar"
 
 ##
@@ -84,10 +78,54 @@ HighLowData %>% filter(date > start & date < end) %>%
   bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5)
 
 
+# Together using scale_facet
+FacettingData <- HighLowData %>% filter(date > start & date < end) %>%
+  select(date, close, volume) %>% gather("statistic","value",2:3)
+StockDataMain <- HighLowData %>% filter(date > start & date < end) %>%
+  select(-volume, - adjusted) %>% mutate(statistic = "close")
+StockDataVolume <- HighLowData %>% filter(date > start & date < end) %>%
+  select(date, volume) %>% mutate(statistic = "volume")
 
+ggplot(FacettingData, aes(x = date, y = value)) + 
+  facet_grid(statistic ~. , scales="free_y") + 
+  geom_line(data = StockDataMain, aes(x = date, y = close)) +
+  geom_bar(data = StockDataVolume, aes(x = date, y = volume), stat = 'identity', width = 1) +
+  labs(title = paste0(STOCK, ": ", PlotType),
+       subtitle = "Volatility",
+       x = "", y = "") +
+    bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5) + theme_minimal()
 
+DefScipen <- getOption('scipen')  
+getOption('digits')  
+options(digits = 2)
+options(scipen=-2)
+1000
 
+# Try mapping the plot with gtable and grid
+x <- seq(1992, 2002, by=2)
 
+d1 <- data.frame(x=x, y=rnorm(length(x)))
+xy <- expand.grid(x=x, y=x)
+d2 <- data.frame(x=xy$x, y=xy$y, z= jitter(xy$x + xy$y))
+
+p1 <-  ggplot(data = d1, mapping = aes(x = x, y = y)) + 
+  geom_line(stat = "identity") 
+
+p2 <-  ggplot(data = d2, mapping = aes(x=x, y=y, fill=z)) + 
+  geom_tile()
+
+## convert plots to gtable objects
+library(gtable)
+library(grid) # low-level grid functions are required
+g1 <- ggplotGrob(p1)
+g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
+g2 <- ggplotGrob(p2)
+g <- rbind(g1, g2, size="first") # stack the two plots
+g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
+# center the legend vertically
+g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
+grid.newpage()
+grid.draw(g)
 
 #### OLDER TEST CODE
 # 

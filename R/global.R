@@ -31,8 +31,8 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 require(repmis)
-require(grid)
-require(gridExtra)
+#require(grid)
+#require(gridExtra)
 require(bdscale)
 
 ##
