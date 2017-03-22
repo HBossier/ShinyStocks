@@ -33,7 +33,7 @@ shiny::runGitHub('ShinyStocks', 'HBossier', subdir = "/R")
 3. Download this repository and enter the directory from within RStudio
 4. Run the following in **R**
 ```r
-shiny::runApp()
+shiny::runApp('R')
 ```
  
 # Info
