@@ -24,31 +24,7 @@
 ##########
 ##
 
-# Load in packages
-library(shiny)
-library(tidyquant)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-require(repmis)
-
-##
-##########
-### Stocks
-##########
-##
-
-# Check whether we are running the app locally (correct WD)
-WD <- getwd()
-if(grepl(pattern = 'StocksApp', x = WD)){
-  # Load the stocks for which we will get data
-  load('Euronext.RDa')
-}else{
-  repmis::source_data("https://github.com/HBossier/ShinyStocks/blob/master/R/Euronext.RDa?raw=true")
-}
-
-# Markets
-markets <- Stocks %>% select(Market) %>% unique() %>% filter(grepl('Euronext', x = Market, ignore.case = TRUE))
+# See global.R
 
 ##
 ##########
@@ -83,8 +59,8 @@ server <- function(input, output) {
     return(HighLowData)
   })
   
-  # Candle plot 
-  output$candlePlot <- renderPlot({
+  # Main plot
+  output$Mainplot <- renderPlot({
     # Get the current selected stock
     STOCK <- currentStock()
     # Get the stock data
@@ -101,8 +77,9 @@ server <- function(input, output) {
     end <- today()
     start <- end - weeks(input$weeks)
     PlotType  <-  input$PlotType
-      # Run plot 
-      HighLowData %>% 
+    
+    # First plot 
+    plot1 <- HighLowData %>% 
         ggplot(aes(x = date, y = close)) + {
           if( PlotType == "Line Bar") geom_line() else geom_candlestick(aes(open = open, close = close, high = high, low = low)) 
         } + {
@@ -121,6 +98,14 @@ server <- function(input, output) {
       coord_x_date(xlim = c(start, end),
                    ylim = c(HighLowData %>% filter(date > start & date < end) %>% select(low) %>% min(),
                             HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max())) 
+    
+    # Second plot
+    plot2 <- HighLowData %>% filter(date > start & date < end) %>%
+      ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
+      bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5) + theme_minimal()
+
+    # Plot them together
+    gridExtra::grid.arrange(plot1, plot2, ncol = 1, heights = c(3,1))
   })
   
   # Plot with highest and lowest value over 10 years
@@ -139,22 +124,5 @@ server <- function(input, output) {
   })
   
   
-  # # Volume 
-  # output$distPlot <- renderPlot({
-  #   STOCK <- input$selectedstock
-  #   symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
-  #   suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
-  #   end <- today()
-  #   start <- end - weeks(input$weeks)
-  #   HighLowData <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
-  #   
-  #   HighLowData %>% filter(date > start & date < end) %>%
-  #     ggplot(aes(x = date, y = close)) +
-  #     geom_candlestick(aes(open = open, close = close, high = high, low = low)) + 
-  #     geom_segment(aes(x = date, y = 0, xend = date, yend = ((volume / max(volume)) * (HighLowData %>% select(high) %>% max())))) +
-  #     labs(title = paste0(STOCK, ": Candlestick"),
-  #          subtitle = "Volatility",
-  #          x = "", y = "Closing Price")
-  # })
-  
+
 }
