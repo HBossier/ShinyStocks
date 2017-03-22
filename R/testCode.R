@@ -84,50 +84,57 @@ HighLowData %>% filter(date > start & date < end) %>%
   bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5)
 
 
-HighLowData %>% filter(date > start & date < end) %>%
-  ggplot(aes(x = factor(format(date, format = '%d%b%y')), y = volume)) + geom_bar(stat="identity")  + theme_minimal() + 
-  #scale_x_date(date_labels = "%b %y", date_breaks = "3 months") +
-  #coord_x_date(xlim = c(start, end)) + 
-  theme(axis.title.x = element_blank(),axis.text.x = element_text(angle=90))
-
-HighLowData %>% filter(date > start & date < end) %>%
-  ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
-  scale_x_discrete(name = 'Date', breaks = NULL)
-
-HighLowData %>% filter(date > start & date < end) %>%
-  ggplot(aes(x = factor(format(date, format = '%d%b')), y = volume)) + geom_bar(stat = 'identity') +
-  scale_x_discrete(name = 'Date', breaks = waiver(), labels = rep('test',9))
 
 
-HighLowData %>% filter(date > start & date < end) %>%
-  ggplot(aes(x = seq(1:dim(.)[1]), y = volume)) + geom_bar(stat = 'identity') +
-  scale_x_continuous(name = 'Date', breaks = seq(1,9,length.out = 4), labels = 
-                       format(date, format = '%d%b')))
 
 
-xlim = c(start, end)
-  
-scale_x_date(labels = HighLowData$date)
 
-
-test <- HighLowData %>% filter(date > start & date < end) %>% mutate(ID = seq_along(date))
-
-test <- HighLowData %>% filter(date > start & date < end) %>% mutate(ID = seq_along(date), 
-                    DayOrigin = as.numeric(as.Date(x = date, origin = origin)))
-dateFU <- function(...,start){
-  as.Date(..., origin = start)
-}
-dateFU(1, start = start)
-test %>%  ggplot(aes(x = ID, y = volume)) + geom_bar(stat = 'identity') +
-  scale_x_continuous(name = 'Date', labels = as.Date(test$DayOrigin))
-
-test <- HighLowData %>% filter(date > start & date < end) 
-test %>%  ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
-  bdscale::scale_x_bd(business.dates = sort(test$date, decreasing = FALSE), max.major.breaks = 5)
-
-
-?bdscale::scale_x_bd
-
-factor(format(test$date, format = '%d%b'))
-format(test$date, format = '%d%b')
+#### OLDER TEST CODE
+# 
+# HighLowData %>% filter(date > start & date < end) %>%
+#   ggplot(aes(x = factor(format(date, format = '%d%b%y')), y = volume)) + geom_bar(stat="identity")  + theme_minimal() + 
+#   #scale_x_date(date_labels = "%b %y", date_breaks = "3 months") +
+#   #coord_x_date(xlim = c(start, end)) + 
+#   theme(axis.title.x = element_blank(),axis.text.x = element_text(angle=90))
+# 
+# HighLowData %>% filter(date > start & date < end) %>%
+#   ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
+#   scale_x_discrete(name = 'Date', breaks = NULL)
+# 
+# HighLowData %>% filter(date > start & date < end) %>%
+#   ggplot(aes(x = factor(format(date, format = '%d%b')), y = volume)) + geom_bar(stat = 'identity') +
+#   scale_x_discrete(name = 'Date', breaks = waiver(), labels = rep('test',9))
+# 
+# 
+# HighLowData %>% filter(date > start & date < end) %>%
+#   ggplot(aes(x = seq(1:dim(.)[1]), y = volume)) + geom_bar(stat = 'identity') +
+#   scale_x_continuous(name = 'Date', breaks = seq(1,9,length.out = 4), labels = 
+#                        format(date, format = '%d%b')))
+# 
+# 
+# xlim = c(start, end)
+#   
+# scale_x_date(labels = HighLowData$date)
+# 
+# 
+# test <- HighLowData %>% filter(date > start & date < end) %>% mutate(ID = seq_along(date))
+# 
+# test <- HighLowData %>% filter(date > start & date < end) %>% mutate(ID = seq_along(date), 
+#                     DayOrigin = as.numeric(as.Date(x = date, origin = origin)))
+# dateFU <- function(...,start){
+#   as.Date(..., origin = start)
+# }
+# dateFU(1, start = start)
+# test %>%  ggplot(aes(x = ID, y = volume)) + geom_bar(stat = 'identity') +
+#   scale_x_continuous(name = 'Date', labels = as.Date(test$DayOrigin))
+# 
+# test <- HighLowData %>% filter(date > start & date < end) 
+# test %>%  ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
+#   bdscale::scale_x_bd(business.dates = sort(test$date, decreasing = FALSE), max.major.breaks = 5)
+# 
+# 
+# ?bdscale::scale_x_bd
+# 
+# factor(format(test$date, format = '%d%b'))
+# format(test$date, format = '%d%b')
 
