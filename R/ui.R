@@ -35,40 +35,68 @@
 
 
 # Define UI for application
-ui <- fluidPage(
-  
-  # Application title
-  titlePanel("wtclassic's Stock Picks"),
-  
-  # Define the sidebar
-  sidebarLayout(
-    sidebarPanel(
-      # Drop down menu to select the market
-      selectInput("markets", label = 'Markets', choices = markets, selected = 'Euronext Brussels'),
-      
-      # Drop down menu to select the stocks: this depends on choice of market, defined in server function below.
-      uiOutput("stockSelection"),
-      
-      # Number of weeks to plot
-      numericInput("weeks", "Number of weeks", value = 52, min = 1, max = 260),
-      
-      # Drop down menu to select plot type
-      selectInput("PlotType", label = 'Type of Plot', choices = c("Line Bar", "Candlestick"), selected = 'Stock Prices'),
-
-      # Checkbox for weighted averages
-      checkboxGroupInput("WA", label = "Weighted average over x days",
-                                choices = list("20" = 1,
-                                               "50" = 2, "150" = 3, "Custom" = 4),
-                                selected = NULL, inline = TRUE),
-      conditionalPanel(condition = "(input.WA[0] == 4) | (input.WA[1] == 4) | (input.WA[2] == 4) | (input.WA[3] == 4)",
-        numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
+ui <- shinyUI(navbarPage("Financial analysis",
+          tabPanel("Stocks",
+          fluidPage(
+            fluidRow(
+              column(3),
+                column(3,
+                  selectInput("markets", label = 'Market', choices = markets, selected = 'Euronext Brussels')
+                ),
+                column(4,
+                uiOutput("stockSelection")
+              )
+              ),
+              
+            sidebarPanel( width = 3,
+              conditionalPanel(condition="input.conditionedPanels==1",
+              h3(uiOutput("Maintitle")),
+              h6(uiOutput("Subtitle1")),
+              h6(uiOutput("Subtitle2")),
+              # Number of weeks to plot
+              numericInput("weeks", "Number of weeks", value = 52, min = 1, max = 260),
+              
+              # Drop down menu to select plot type
+              selectInput("PlotType", label = 'Type of Plot', choices = c("Line Bar", "Candlestick"), selected = 'Stock Prices'),
+              
+              # Checkbox for weighted averages
+              checkboxGroupInput("WA", label = "Weighted average over x days",
+                choices = list("20" = 1,
+                  "50" = 2, "150" = 3, "Custom" = 4),
+                  selected = NULL, inline = TRUE),
+                    conditionalPanel(condition = "(input.WA[0] == 4) | (input.WA[1] == 4) | (input.WA[2] == 4) | (input.WA[3] == 4)",
+                      numericInput("manWA", "days:", value = 0, min = 1, max = 1800)
+                    ),
+                    
+                    # Plot 10 year
+                    plotOutput("Plot10")
+                    ),
+                    conditionalPanel(condition="input.conditionedPanels==2",
+                      radioButtons("dist", "Select data:",
+                        c("Financial data" = "Fin_data",
+                        "Expectations" = "Expectations",
+                        "Analist expectation" = "Analist",
+                        "Results" = "Res"))
+                        ) 
+                      ),
+mainPanel(
+  tabsetPanel(
+    tabPanel("Technical analysis", value=1, 
+    plotOutput("Mainplot")), 
+    tabPanel("Fundamental analysis", value=2),
+    tabPanel("Agenda", value=3),
+    tabPanel("Advices", value=4),
+    tabPanel("Financials", value=5)
+      , id = "conditionedPanels"
       )
-    ),
-    # Show the candle plot
-    mainPanel(
-      plotOutput("Mainplot"),
-      plotOutput("Plot10")
     )
   )
-)
+),                         
+tabPanel("Bonds"),
+tabPanel("ETFS"),
+tabPanel("Funds"),
+tabPanel("Commodities"),
+tabPanel("Futures"),
+tabPanel("Disclaimer")
+))
 

@@ -28,11 +28,11 @@
 library(shiny)
 library(tidyquant)
 library(ggplot2)
+library(grid)
+library(gtable)
 library(dplyr)
 library(tidyr)
 require(repmis)
-#require(grid)
-#require(gridExtra)
 require(bdscale)
 
 ##
