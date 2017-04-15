@@ -62,7 +62,7 @@ PlotType  <-  "Line Bar"
 ##
 
 # Line bar 
-HighLowData %>% 
+LB <- HighLowData %>% 
   ggplot(aes(x = date, y = close)) + 
      geom_line() +
     labs(title = paste0(STOCK, ": ", PlotType),
@@ -73,8 +73,9 @@ HighLowData %>%
         HighLowData %>% filter(date > start & date < end) %>% select(high) %>% max())) 
 
 # Volume
-HighLowData %>% filter(date > start & date < end) %>%
-  ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity') +
+VOL <- HighLowData %>% filter(date > start & date < end) %>%
+  ggplot(aes(x = date, y = volume)) + geom_bar(stat = 'identity', width = 1) +
+  scale_y_continuous(labels = scales::scientific, position = 'left') +
   bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5)
 
 
@@ -124,6 +125,40 @@ g <- rbind(g1, g2, size="first") # stack the two plots
 g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
 # center the legend vertically
 g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
+grid.newpage()
+grid.draw(g)
+
+
+# Now with LB and VOL
+g1 <- ggplotGrob(LB)
+g2 <- ggplotGrob(VOL)
+g <- rbind(g1, g2, size="first") # stack the two plots
+g2$heights
+g$widths
+grid.newpage()
+grid.draw(g)
+
+
+
+# The problem now is that we first filter the dates, but then need to calculate the weighted average
+HighLowData %>% mutate(SMA = SMA(close, n = 10)) %>% filter(date > start & date < end)
+  
+
+LBWMA <- HighLowData %>% mutate(SMA = WMA(close, n = 10)) %>% filter(date > start & date < end) %>%
+  ggplot(aes(x = date, y = close)) + 
+  geom_line(aes(x = date, y = close)) +
+  geom_line(aes(x = date, y = SMA), colour = 'purple', linetype = 'dashed', size = 1) +
+  bdscale::scale_x_bd(business.dates = sort(HighLowData$date, decreasing = FALSE), max.major.breaks = 5) + 
+  labs(title = paste0(STOCK, ": ", PlotType),
+       subtitle = "Volatility",
+       x = "", y = "Closing Price") +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank())
+
+g1 <- ggplotGrob(LBWMA)
+g2 <- ggplotGrob(VOL)
+g <- rbind(g1, g2, size="first") # stack the two plots
 grid.newpage()
 grid.draw(g)
 
