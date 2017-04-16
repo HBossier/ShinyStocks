@@ -35,53 +35,65 @@
 
 server <- function(input, output) {
 
-  # Generate data, based on selection of the stock
+  # Option to select the stock and benchmark, based on the market 
   output$stockSelection <- renderUI({
-      selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ABLYNX')
+      selectInput("selectedstock", label = 'Stocks', choices = Stocks %>% filter(Market == input$markets) %>% select(Name), selected = 'ABLYNX')
   })
   output$benchSelection  <- renderUI({
-    selectInput("selectedstock_benc", label = 'Stock', choices = Stocks %>% filter(Market == input$markets) %>% select(Naam), selected = 'ARGEN-X')
+    selectInput("selectedstock_benc", label = 'Stock', choices = Stocks %>% filter(Market == input$markets) %>% select(Name), selected = 'ARGEN-X')
   })  
 
-  # Current selected stock
+  # Current selected stock and benchmark 
   currentStock <- reactive({
     if(is.null(input$selectedstock)){
-      STOCK <- 'ABLYNX'
-      STOCKBENC <- 'ARGEN-X'
+      STOCK <- data.frame(Name = 'ABLYNX', Type = 'STOCK',
+                stringsAsFactors = FALSE)
+      STOCKBENC <- data.frame(Name = 'ARGEN-X', Type = 'BENCHMARK',
+                stringsAsFactors = FALSE)
     }else{
-      STOCK <- input$selectedstock
-      STOCKBENC <- input$selectedstock_benc
+      STOCK <- data.frame(Name = input$selectedstock, Type = 'STOCK',
+                stringsAsFactors = FALSE)
+      STOCKBENC <- data.frame(Name = input$selectedstock_benc, Type = 'BENCHMARK',
+                stringsAsFactors = FALSE)
     }
-    return(list(STOCK = STOCK, STOCKBENC = STOCKBENC))
+    # Add symbol and suffix to selected stock 
+    SymbolSuff <- Stocks %>% filter(Name %in% c(STOCK$Name,STOCKBENC$Name)) %>% select(Symbol,suffix,Name)
+    
+    return(bind_rows(STOCK,STOCKBENC) %>% inner_join(.,SymbolSuff, by = "Name"))
   })
-  # currentStock2 <- reactive({
-  #   if(is.null(input$selectedstock_benc)){
-  #     STOCK2 <- 'ABLYNX'
-  #   }else{
-  #     STOCK2 <- input$selectedstock_benc
-  #   }
-  #   return(STOCK2)
-  # })
   
   # Data, based on current stock
   currentStockData <- reactive({
-    STOCK <- currentStock()$STOCK
-    STOCKBENC <- currentStock()$STOCKBENC
-    symbols <- Stocks %>% filter(Naam %in% c(STOCK,STOCKBENC)) %>% select(Symbol,Naam)
-    suffix <- Stocks %>% filter(Naam %in% c(STOCK,STOCKBENC)) %>% select(suffix,Naam)
-    HighLowData <- tq_get(paste0(filter(symbols, Naam == STOCK)['Symbol'], ".", 
-        filter(suffix, Naam == STOCK)['suffix']), 
+    stockInfo <- currentStock() %>% filter(Type == 'STOCK')
+    benchInfo <- currentStock() %>% filter(Type == 'BENCHMARK')
+
+    HighLowData <- tq_get(paste0(stockInfo$Symbol, ".", stockInfo$suffix), 
         get = "stock.prices", from = " 1990-01-01")
-    BenchData <- tq_get(paste0(filter(symbols, Naam == STOCKBENC)['Symbol'], ".", 
-        filter(suffix, Naam == STOCKBENC)['suffix']), 
+    BenchData <- tq_get(paste0(benchInfo$Symbol, ".", benchInfo$suffix), 
         get = "stock.prices", from = " 1990-01-01")
     return(list(HighLowData = HighLowData, BenchData = BenchData))
   })
 
+
+  # # Data, based on current stock
+  # currentStock <- reactive({
+  #   STOCK <- currentStock()$STOCK
+  #   STOCKBENC <- currentStock()$STOCKBENC
+  #   symbols <- Stocks %>% filter(Name %in% c(STOCK,STOCKBENC)) %>% select(Symbol,Name)
+  #   suffix <- Stocks %>% filter(Name %in% c(STOCK,STOCKBENC)) %>% select(suffix,Name)
+  #   HighLowData <- tq_get(paste0(filter(symbols, Name == STOCK)['Symbol'], ".", 
+  #       filter(suffix, Name == STOCK)['suffix']), 
+  #       get = "stock.prices", from = " 1990-01-01")
+  #   BenchData <- tq_get(paste0(filter(symbols, Name == STOCKBENC)['Symbol'], ".", 
+  #       filter(suffix, Name == STOCKBENC)['suffix']), 
+  #       get = "stock.prices", from = " 1990-01-01")
+  #   return(list(HighLowData = HighLowData, BenchData = BenchData))
+  # })
+
   #  currentStockData2 <- reactive({
   #   STOCK2 <- currentStock()$STOCKBENC
-  #   symbol <- Stocks %>% filter(Naam == STOCK2) %>% select(Symbol)
-  #   suffix <- Stocks %>% filter(Naam == STOCK2) %>% select(suffix)
+  #   symbol <- Stocks %>% filter(Name == STOCK2) %>% select(Symbol)
+  #   suffix <- Stocks %>% filter(Name == STOCK2) %>% select(suffix)
   #   HLData2 <- tq_get(paste0(symbol, ".", suffix), get = "stock.prices", from = " 1990-01-01")
   #   return(HLData2)
   # })
@@ -90,14 +102,14 @@ server <- function(input, output) {
   ### # Generate titles and text_snippets
   ##########
   Ticker <- reactive({
-    STOCK <- currentStock()$STOCK
-    symbol <- Stocks %>% filter(Naam == STOCK) %>% select(Symbol)
-    suffix <- Stocks %>% filter(Naam == STOCK) %>% select(suffix)
-    ticker <- paste0(symbol, ".", suffix)
+    stockInfo <- currentStock() %>% filter(Type == 'STOCK')
+    ticker <- paste0(stockInfo$Symbol, ".", stockInfo$suffix)
     return(ticker)
   })
   
-  output$Maintitle <- renderText({currentStock()$STOCK})
+  output$Maintitle <- renderText({
+    currentStock() %>% filter(Type == 'STOCK') %>% select(Name) %>% as.character()
+  })
   output$Subtitle1 <- renderText({paste( paste("Ticker:", Ticker()), sep = '\t')})
   output$market <- renderText({paste("Add underlying index (", input$markets , ")", sep = "")}) 
   
@@ -107,9 +119,8 @@ server <- function(input, output) {
   
   # Main plot
   output$Mainplot <- renderPlot({
-    print(currentStock()$STOCKBENC)
    # Input parameters 
-   STOCK <- currentStock()$STOCK
+   STOCK <- currentStock() %>% filter(Type == 'STOCK') %>% select(Name)
    # Get the stock data
    HighLowData <- currentStockData()$HighLowData
    # Get weighted average

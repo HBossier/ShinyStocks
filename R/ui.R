@@ -80,7 +80,7 @@ ui <- shinyUI(navbarPage("Financial analysis",
   
               # Tick boxes for scale: linear, procentual or log scale 
               radioButtons("scale", label = "Scale", 
-                choices = list("Linear" = 1, "Procentual" = 2, "Logaritmic" = 3),
+                choices = list("Linear" = 1, "Procentual" = 2, "Logarihtmic" = 3),
                 selected = 1, inline = TRUE),
   
               # Check box for adding index 

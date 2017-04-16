@@ -46,9 +46,10 @@ TimePoints <- list(
 Stocks.raw <- fread(file = paste0(raw_data, TimePoints[['March2017']],'.csv')) %>% 
         slice(-(1:3)) %>% tbl_df
 
-# Select name, symbel and market
-Stocks <- Stocks.raw %>% select(Naam, Symbol, Market)
+# Select name, symbel and market and rename Naam (Dutch) to Name
+Stocks <- Stocks.raw %>% select(Naam, Symbol, Market) %>% rename(Name = Naam)
 
+  
 # Suffix, depending on market
 marketSuffix <- data.frame('market' = c(
     'paris',
