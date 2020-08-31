@@ -17,7 +17,7 @@ To see the app under development stage, there are two options.
   * repmis
 
   ```r
-  install.packages(c("shiny", "tidyquant","ggplot2" , "dplyr", "tidyr", "repmis)) 
+  install.packages(c("shiny", "tidyquant","ggplot2" , "dplyr", "tidyr", "repmis")) 
   ``` 
 4. Then run the command: 
 ```r
